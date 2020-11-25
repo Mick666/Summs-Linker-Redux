@@ -10,7 +10,8 @@ const drawerWidth = 240
 const useStyles = makeStyles((theme) => ({
     root: {
         display: 'flex',
-        textAlign: 'center'
+        textAlign: 'center',
+        maxWidth: '1500px'
     },
     appBar: {
         width: `calc(100% - ${drawerWidth}px)`,
@@ -31,7 +32,7 @@ const useStyles = makeStyles((theme) => ({
     },
     parentGrid: {
         display: 'grid',
-        gridTemplateColumns: 'auto auto',
+        gridTemplateColumns: 'auto 10vh auto',
         gridTemplateRows: 'auto'
     },
     linkedOutput: {
@@ -45,11 +46,12 @@ function App() {
     const [textInput, setTextInput] = useState('')
     const [linkedOutput, setOutput] = useState(null)
     const [prevState, setPrevState] = useState(null)
-    const [summaryType, setSummaryType] = useState('Standard')
-    const [boldCheck, setBold] = useState(false)
-    const [italicCheck, setItalic] = useState(false)
-    const [linkTheCheck, setLinkThe] = useState(false)
-    const [platformCheck, setPlatform] = useState(true)
+    const [options, setOptions] = useState({
+        summaryType: 'Standard',
+        boldCheck: false,
+        italicCheck: false,
+        linkTheCheck: false
+    })
 
     const clearAll = () => {
         setPrevState(linkedOutput)
@@ -75,14 +77,17 @@ function App() {
         for (let i = 0, j = 0; i < summs.length && j < links.length; i++) {
             let text = summs[i].replace(/–/g, '-')
             let para = []
-            if (summaryType === 'Standard') {
-                if (!linkTheCheck && text.startsWith('The')) {
+            let links = []
+            if (options.summaryType === 'Standard') {
+                if (!options.linkTheCheck && text.startsWith('The')) {
                     text = text.slice(4)
-                    para.push(<Typography className={classes.linkedOutput}>The&nbsp;</Typography>)
+                    links.push(
+                        <Typography className={classes.linkedOutput}>
+                        The&nbsp;
+                        </Typography>)
                 }
-                console.log(text, para)
 
-                if (text.match(/^.*?(?= report)|(?= reports)/) === null) {
+                if (!text.match(/^.*?(?= report)|(?= reports)/)) {
                     continue
                 }
                 let textMatch = text.match(/^.*?(?= report)|(?= reports)/)[0]
@@ -90,26 +95,28 @@ function App() {
                 if (textSplit.length > 1) {
                     let separators = textMatch.match(/,(?:[^,])| and /g)
                     for (let x = 0; x < textSplit.length; x++, j++) {
-                        appendLinks(links[j], textSplit[x], para)
+                        appendLinks(links[j], textSplit[x], links)
                         if (separators[x]) {
-                            if (platformCheck.checked) separators[x] = separators[x].trim()
-                            para.push(<Typography className={classes.linkedOutput}>{separators[x]}</Typography>)
+                            if (options.platformCheck) separators[x] = separators[x].trim()
+                            links.push(<Typography className={classes.linkedOutput}>{separators[x]}</Typography>)
                         }
                     }
                 } else {
-                    appendLinks(links[j], textMatch, para)
+                    appendLinks(links[j], textMatch, links)
                     j++
                 }
-                appendText(text, para)
+                appendText(text, para, links)
                 para.push(<br />)
                 combinedParas.push(para)
-            } else if (summaryType === 'Industry') {
+            } else if (options.summaryType === 'Industry') {
                 appendText(text, para)
+                if (!text.match(/( - )(.*)$/)) continue
                 appendLinks(links[j], text.match(/( - )(.*)$/)[2], para)
                 para.push(<br />)
                 combinedParas.push(para)
                 j++
-            } else if (summaryType === 'Coles') {
+            } else if (options.summaryType === 'Coles') {
+                if (!text.match(/( - )(.*)$/)) continue
                 let textMatch = text.match(/( - )(.*)$/)[2]
                 let textSplit = textMatch.split(/ and |, /)
                 appendText(text, para)
@@ -118,7 +125,7 @@ function App() {
                     for (let x = 0; x < textSplit.length; x++, j++) {
                         appendLinks(links[j], textSplit[x], para)
                         if (separators[x]) {
-                            if (platformCheck.checked) separators[x] = separators[x].trim()
+                            if (options.platformCheck.checked) separators[x] = separators[x].trim()
                             para.push(<Typography className={classes.linkedOutput}>{separators[x]}</Typography>)
                         }
                     }
@@ -135,31 +142,35 @@ function App() {
 
 
     function appendLinks(link, text, para) {
-        if (boldCheck) {
+        if (options.boldCheck) {
             para.push(
                 <b>
                     <Link href={link} className={classes.linkedOutput}>{text}</Link>
                 </b>)
-        } else if (italicCheck) {
+        } else if (options.italicCheck) {
             para.push(
                 <i>
                     <Link href={link} className={classes.linkedOutput}>{text}</Link>
                 </i>)
         } else {
-            para.push(<Link href={link} className={classes.linkedOutput}>{text}</Link>)
+            para.push(<Link href={link} className={classes.linkedOutput}>{text.trim()}</Link>)
         }
     }
 
-    function appendText(text, para) {
+    function appendText(text, para, links) {
         let textComb
-        if (summaryType === 'Standard' || summaryType === '') {
+        if (options.summaryType === 'Standard' || options.summaryType === '') {
             textComb = text.split(/^.*?(?= report)|(?= reports)/)[1]
-            if (platformCheck) textComb = textComb.trim()
-            para.push(<Typography className={classes.linkedOutput}>{textComb}</Typography>)
-        } else if (summaryType === 'Industry' || summaryType === 'Coles') {
+            if (options.platformCheck) textComb = textComb.trim()
+            para.push(
+                <Typography className={classes.linkedOutput}>
+                    {links}{' '}{textComb}
+                </Typography>)
+        } else if (options.summaryType === 'Industry' || options.summaryType === 'Coles') {
             var match = text.match(/( - )(.*)$/)
+            if (!match) return
             textComb = text.slice(0, match.index + 3)
-            if (platformCheck && summaryType === 'Industry') textComb = textComb.trim()
+            if (options.platformCheck && options.summaryType === 'Industry') textComb = textComb.trim()
             para.push(<Typography className={classes.linkedOutput}>{textComb}</Typography>)
         }
     }
@@ -186,16 +197,8 @@ function App() {
                     clearAll={clearAll}
                     undoClear={undoClear}
                     linkText={linkText}
-                    summaryType={summaryType}
-                    setSummary={setSummaryType}
-                    bold={boldCheck}
-                    setBold={setBold}
-                    italic={italicCheck}
-                    setItalic={setItalic}
-                    linkThe={linkTheCheck}
-                    setLink={setLinkThe}
-                    platform={platformCheck}
-                    setPlatform={setPlatform}
+                    options={options}
+                    setOptions={setOptions}
                 />
             </Drawer>
             <main className={classes.content}>
@@ -205,6 +208,7 @@ function App() {
                         handleChange={setTextInput}
                         textInput={textInput}
                     />
+                    <div></div>
                     <Output outputData={linkedOutput} />
                 </Container>
             </main>

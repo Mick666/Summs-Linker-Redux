@@ -1,11 +1,11 @@
 import React from 'react'
-import { Typography } from '@material-ui/core'
+import { Typography, TextareaAutosize } from '@material-ui/core'
 
 const Input = ({ handleChange, textInput }) => {
     return (
         <div>
             <Typography variant='h4'>Text and Links</Typography>
-            <textarea
+            <TextareaAutosize
                 rows='25'
                 cols='60'
                 value={textInput}

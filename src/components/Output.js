@@ -1,11 +1,13 @@
 import React from 'react'
-import { Container } from '@material-ui/core'
+import { Container, Box, Typography } from '@material-ui/core'
 import { makeStyles } from '@material-ui/core/styles'
 
-const drawerWidth = 240
 const useStyles = makeStyles(() => ({
     outputContainer: {
-        display: 'inline-block'
+        display: 'inline-block',
+        textAlign: 'left',
+        wordWrap: 'break-word',
+        maxWidth: '1500px'
     }
 }))
 
@@ -16,8 +18,14 @@ const Output = ({ outputData }) => {
         <div></div>
     )
     return (
-        <Container>
-            {outputData}
+        <Container className={classes.outputContainer}>
+            <Typography variant='h4'>Linked text</Typography>
+            {outputData.map((summ, i) => {
+                return (<Box key={i} whiteSpace="normal">
+                    {summ.map(x => x)}
+                </Box>
+                )
+            })}
         </Container>
     )
 }
