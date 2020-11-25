@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import './App.css'
-import { Drawer, AppBar, Toolbar, Typography, Container } from '@material-ui/core'
+import { Drawer, AppBar, Toolbar, Typography, Container, Link } from '@material-ui/core'
 import { makeStyles } from '@material-ui/core/styles'
 import Sidebar from './components/Sidebar'
 import Input from './components/Input'
@@ -27,6 +27,16 @@ const useStyles = makeStyles((theme) => ({
     content: {
         flexGrow: 1,
         padding: theme.spacing(3),
+        width: '75vh'
+    },
+    parentGrid: {
+        display: 'grid',
+        gridTemplateColumns: 'auto auto',
+        gridTemplateRows: 'auto'
+    },
+    linkedOutput: {
+        display: 'inline-block',
+        textAlign: 'left'
     }
 }))
 
@@ -52,6 +62,7 @@ function App() {
     }
 
     function linkText() {
+        clearAll()
         let strippedInput = textInput
             .split('\n')
             .filter(x => x.replace(/\n| /g, '').length > 0)
@@ -59,19 +70,17 @@ function App() {
         let links = strippedInput.filter(x => x.startsWith('http'))
         let summs = strippedInput.filter(x => !x.startsWith('http') && x.length > 10)
         let combinedParas = []
+        console.log(links, summs)
 
         for (let i = 0, j = 0; i < summs.length && j < links.length; i++) {
             let text = summs[i].replace(/–/g, '-')
             let para = []
-            let link = document.createElement('a')
-            if (boldCheck.checked) var bold = document.createElement('b')
-            if (italicCheck.checked) var italic = document.createElement('i')
-
-            if (summaryType.value === 'Standard' || summaryType.value === '') {
-                if (!linkTheCheck.checked && text.startsWith('The')) {
+            if (summaryType === 'Standard') {
+                if (!linkTheCheck && text.startsWith('The')) {
                     text = text.slice(4)
-                    para.push(document.createTextNode('The '))
+                    para.push(<Typography className={classes.linkedOutput}>The&nbsp;</Typography>)
                 }
+                console.log(text, para)
 
                 if (text.match(/^.*?(?= report)|(?= reports)/) === null) {
                     continue
@@ -81,60 +90,43 @@ function App() {
                 if (textSplit.length > 1) {
                     let separators = textMatch.match(/,(?:[^,])| and /g)
                     for (let x = 0; x < textSplit.length; x++, j++) {
-                        let newLink = document.createElement('a')
-                        newLink.href = links[j]
-                        newLink.text = textSplit[x]
-                        if (bold) bold = document.createElement('b')
-                        if (italic) italic = document.createElement('i')
-                        appendLinks(newLink, para, bold, italic)
+                        appendLinks(links[j], textSplit[x], para)
                         if (separators[x]) {
                             if (platformCheck.checked) separators[x] = separators[x].trim()
-                            para.push(document.createTextNode(separators[x]))
+                            para.push(<Typography className={classes.linkedOutput}>{separators[x]}</Typography>)
                         }
                     }
                 } else {
-                    link.text = textMatch
-                    link.href = links[j]
-                    appendLinks(link, para, bold, italic)
+                    appendLinks(links[j], textMatch, para)
                     j++
                 }
                 appendText(text, para)
-                para.push(document.createElement('br'))
+                para.push(<br />)
                 combinedParas.push(para)
-            } else if (summaryType.value === 'Industry') {
+            } else if (summaryType === 'Industry') {
                 appendText(text, para)
-                link.text = text.match(/( - )(.*)$/)[2]
-                link.href = links[j]
-                appendLinks(link, para, bold, italic)
-                para.push(document.createElement('br'))
+                appendLinks(links[j], text.match(/( - )(.*)$/)[2], para)
+                para.push(<br />)
                 combinedParas.push(para)
                 j++
-            } else if (summaryType.value === 'Coles') {
+            } else if (summaryType === 'Coles') {
                 let textMatch = text.match(/( - )(.*)$/)[2]
                 let textSplit = textMatch.split(/ and |, /)
                 appendText(text, para)
                 if (textSplit.length > 1) {
                     let separators = textMatch.match(/,(?:[^,])| and /g)
                     for (let x = 0; x < textSplit.length; x++, j++) {
-                        let newLink = document.createElement('a')
-                        if (links[j]) newLink.href = links[j]
-                        newLink.text = textSplit[x]
-                        if (bold) bold = document.createElement('b')
-                        if (italic) italic = document.createElement('i')
-                        appendLinks(newLink, para, bold, italic)
+                        appendLinks(links[j], textSplit[x], para)
                         if (separators[x]) {
-                            console.log(separators[x])
                             if (platformCheck.checked) separators[x] = separators[x].trim()
-                            para.push(document.createTextNode(separators[x]))
+                            para.push(<Typography className={classes.linkedOutput}>{separators[x]}</Typography>)
                         }
                     }
                 } else {
-                    link.text = textMatch
-                    link.href = links[j]
-                    appendLinks(link, para, bold, italic)
+                    appendLinks(links[j], textMatch, para)
                     j++
                 }
-                para.push(document.createElement('br'))
+                para.push(<br />)
                 combinedParas.push(para)
             }
         }
@@ -142,58 +134,80 @@ function App() {
     }
 
 
-    function appendLinks(link, para, bold, italic) {
-        if (bold) {
-            if (italic) {
-                italic.appendChild(link)
-                bold.appendChild(italic)
-            } else { bold.appendChild(link) }
-            para.push(bold)
-        } else if (italic) {
-            italic.appendChild(link)
-            para.push(italic)
+    function appendLinks(link, text, para) {
+        if (boldCheck) {
+            para.push(
+                <b>
+                    <Link href={link} className={classes.linkedOutput}>{text}</Link>
+                </b>)
+        } else if (italicCheck) {
+            para.push(
+                <i>
+                    <Link href={link} className={classes.linkedOutput}>{text}</Link>
+                </i>)
         } else {
-            para.push(link)
+            para.push(<Link href={link} className={classes.linkedOutput}>{text}</Link>)
         }
     }
 
     function appendText(text, para) {
         let textComb
-        if (summaryType.value === 'Standard' || summaryType.value === '') {
+        if (summaryType === 'Standard' || summaryType === '') {
             textComb = text.split(/^.*?(?= report)|(?= reports)/)[1]
-            if (platformCheck.checked) textComb = textComb.trim()
-            para.push(document.createTextNode(textComb))
-        } else if (summaryType.value === 'Industry' || summaryType.value === 'Coles') {
+            if (platformCheck) textComb = textComb.trim()
+            para.push(<Typography className={classes.linkedOutput}>{textComb}</Typography>)
+        } else if (summaryType === 'Industry' || summaryType === 'Coles') {
             var match = text.match(/( - )(.*)$/)
             textComb = text.slice(0, match.index + 3)
-            if (platformCheck.checked && summaryType.value === 'Industry') textComb = textComb.trim()
-            para.push(document.createTextNode(textComb))
+            if (platformCheck && summaryType === 'Industry') textComb = textComb.trim()
+            para.push(<Typography className={classes.linkedOutput}>{textComb}</Typography>)
         }
     }
 
-
     return (
         <Container className={classes.root}>
-            <Sidebar
-                clearAll={clearAll}
-                undoClear={undoClear}
-                linkText={linkText}
-                summaryType={summaryType}
-                setSummary={setSummaryType}
-                bold={boldCheck}
-                setBold={setBold}
-                italic={italicCheck}
-                setItalic={setItalic}
-                linkThe={linkTheCheck}
-                setLink={setLinkThe}
-                platform={platformCheck}
-                setPlatform={setPlatform}
-            />
-            <Input
-                handleChange={setTextInput}
-                textInput={textInput}
-            />
-            <Output outputData={linkedOutput} />
+            <AppBar position="fixed" className={classes.appBar}>
+                <Toolbar>
+                    <Typography variant="h6" noWrap>
+                        Summaries Linker
+                    </Typography>
+                </Toolbar>
+            </AppBar>
+            <Drawer
+                className={classes.drawer}
+                variant="permanent"
+                classes={{
+                    paper: classes.drawerPaper,
+                }}
+                anchor="left"
+            >
+                <div className={classes.toolbar} />
+                <Sidebar
+                    clearAll={clearAll}
+                    undoClear={undoClear}
+                    linkText={linkText}
+                    summaryType={summaryType}
+                    setSummary={setSummaryType}
+                    bold={boldCheck}
+                    setBold={setBold}
+                    italic={italicCheck}
+                    setItalic={setItalic}
+                    linkThe={linkTheCheck}
+                    setLink={setLinkThe}
+                    platform={platformCheck}
+                    setPlatform={setPlatform}
+                />
+            </Drawer>
+            <main className={classes.content}>
+                <div className={classes.toolbar} />
+                <Container className={classes.parentGrid}>
+                    <Input
+                        handleChange={setTextInput}
+                        textInput={textInput}
+                    />
+                    <Output outputData={linkedOutput} />
+                </Container>
+            </main>
         </Container>
     )
 }

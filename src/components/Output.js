@@ -1,14 +1,24 @@
 import React from 'react'
+import { Container } from '@material-ui/core'
+import { makeStyles } from '@material-ui/core/styles'
+
+const drawerWidth = 240
+const useStyles = makeStyles(() => ({
+    outputContainer: {
+        display: 'inline-block'
+    }
+}))
 
 const Output = ({ outputData }) => {
+    console.log(outputData)
+    const classes = useStyles()
     if (!outputData) return (
         <div></div>
     )
-
     return (
-        <div id='outputParentDiv'>
-            {outputData.forEach(x => document.getElementById('outputParentDiv').appendChild(x))}
-        </div>
+        <Container>
+            {outputData}
+        </Container>
     )
 }
 

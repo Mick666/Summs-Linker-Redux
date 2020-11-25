@@ -9,7 +9,7 @@ const Input = ({ handleChange, textInput }) => {
                 rows='25'
                 cols='60'
                 value={textInput}
-                onChange={(e) => handleChange(e.value)}
+                onChange={(e) => handleChange(e.target.value) }
             />
         </div>
     )
