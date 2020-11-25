@@ -1,5 +1,6 @@
 {
   "name": "summs-linker-redux",
+  "homepage": "http://Mick666.github.io/Summs-Linker-Redux",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -16,7 +17,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [
@@ -37,6 +39,7 @@
     ]
   },
   "devDependencies": {
-    "eslint-plugin-jest": "^24.1.3"
+    "eslint-plugin-jest": "^24.1.3",
+    "gh-pages": "^3.1.0"
   }
 }
